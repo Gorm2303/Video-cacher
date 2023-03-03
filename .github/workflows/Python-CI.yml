@@ -29,4 +29,4 @@ jobs:
         run: docker build . --tag video-cacher-image
 
       - name: Run tests
-        run: docker run video-cacher-image pytest tests/
+        run: docker run video-cacher-image pytest
