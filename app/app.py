@@ -1,49 +1,52 @@
 from flask import Flask, jsonify
-from pymongo import MongoClient
+import redis
+import requests
 
 app = Flask(__name__)
+redis_conn = redis.Redis(host='localhost', port=6379, db=0, password='redis')
 
-# Connect to MongoDB database
-client = MongoClient()
-db = client['video_db']
-videos = db['videos']
 
-# Define API endpoints
-@app.route('/')
-def index():
-    return 'Welcome to the Video API!'
+def get_video_metadata_from_mongodb():
+    # Make a request to MongoDB API
+    response = requests.get('https://your-mongodb-api.com/data')
+    # Convert the response to JSON
+    video_metadata = response.json()
+    return video_metadata
 
-@app.route('/videos')
-def get_videos():
-    results = []
-    for video in videos.find():
-        results.append({
-            'id': str(video['_id']),
-            'title': video['title'],
-            'description': video['description'],
-            'genres': video['genres'],
-            'length': video['length'],
-            'release_date': video['release_date'],
-            'image': video['image']
-        })
-    return jsonify(results)
+def get_video_metadata_from_mongodb(id):
+    # Make a request to MongoDB API
+    response = requests.get(f'https://your-mongodb-api.com/data/{id}')
+    # Convert the response to JSON
+    video_metadata = response.json()
+    return video_metadata
 
-@app.route('/videos/<string:video_id>')
-def get_video(video_id):
-    video = videos.find_one({ '_id': ObjectId(video_id) })
-    if video is None:
-        return jsonify({ 'error': 'Video not found' }), 404
+# Endpoint to get video metadata for all videos
+@app.route('/videometadata')
+def get_video_metadata():
+    # Try to get the video metadata from Redis
+    data = redis_conn.get('data')
+    if data is not None:
+        return data.decode('utf-8')
     else:
-        result = {
-            'id': str(video['_id']),
-            'title': video['title'],
-            'description': video['description'],
-            'genres': video['genres'],
-            'length': video['length'],
-            'release_date': video['release_date'],
-            'image': video['image']
-        }
-        return jsonify(result)
+        # If the data is not in Redis, get it from MongoDB
+        data = get_video_metadata_from_mongodb()
+        # Cache the data in Redis for 1 hour (3600 seconds)
+        redis_conn.setex('data', 3600, jsonify(data))
+        return jsonify(data)
+    
+# Endpoint using id to get video metadata for one video
+@app.route('/videometadata/<id>')
+def get_video_metadata(id):
+    # Try to get the video metadata from Redis
+    data = redis_conn.get(f'data:{id}')
+    if data is not None:
+        return data.decode('utf-8')
+    else:
+        # If the data is not in Redis, get it from MongoDB
+        data = get_video_metadata_from_mongodb(id)
+        # Cache the data in Redis for 1 hour (3600 seconds)
+        redis_conn.setex(f'data:{id}', 3600, jsonify(data))
+        return jsonify(data)
 
 if __name__ == '__main__':
     app.run(debug=True)
