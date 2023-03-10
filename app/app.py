@@ -33,7 +33,7 @@ def index():
     return 'Welcome to the Video cacher API!'
 
 # Endpoint to get video metadata for all videos
-@app.route('/videometadata')
+@app.route('/api/v1/videometadata')
 def get_videos_metadata():
     # Try to get the video metadata from Redis
     data = redis_conn.get('data')
@@ -51,7 +51,7 @@ def get_videos_metadata():
         return jsonify(data)
     
 # Endpoint using id to get video metadata for one video
-@app.route('/videometadata/<id>')
+@app.route('/api/v1/videometadata/<id>')
 def get_video_metadata(id):
     # Try to get the video metadata from Redis
     data = redis_conn.get(f'data:{id}')
