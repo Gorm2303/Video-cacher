@@ -1,10 +1,13 @@
 from flask import Flask, jsonify
+from flask_cors import CORS
 import redis
 import requests
 import os
 import json
 
 app = Flask(__name__)
+cors = CORS(app)
+cors = CORS(app, origins=["http://localhost:3000"])
 redis_url = os.environ.get('REDIS_URL')
 # Endpoint for getting all videos' metadata from video reader
 videos_url = os.environ.get('VIDEOS_URL')
