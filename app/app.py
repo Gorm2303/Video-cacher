@@ -35,23 +35,28 @@ def get_video_metadata_from_mongodb(id):
 def index():
     return 'Welcome to the Video cacher API!'
 
-# Endpoint to get video metadata for all videos
-@app.route('/api/v1/videometadata')
+
 def get_videos_metadata():
     # Try to get the video metadata from Redis
     data = redis_conn.get('data')
     if data is not None:
         # Convert string to JSON
         data = json.loads(data)
-        return jsonify(data) 
     else:
         # If the data is not in Redis, get it from MongoDB
         data = get_videos_metadata_from_mongodb()
         # Convert JSON to string to cache it in Redis 
         json_str = json.dumps(data)
         # Cache the data in Redis for 1 hour (3600 seconds)
-        redis_conn.setex('data', 3600, json_str)    
-        return jsonify(data)
+        redis_conn.setex('data', 3600, json_str)
+    return data
+
+# Endpoint to get video metadata for all videos
+@app.route('/api/v1/videometadata')
+def get_videos_metadata_endpoint():
+    data = get_videos_metadata()
+    return jsonify(data)
+
     
 # Endpoint using id to get video metadata for one video
 @app.route('/api/v1/videometadata/<id>')
