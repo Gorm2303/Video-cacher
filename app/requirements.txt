@@ -3,3 +3,4 @@ Pytest==6.2.4
 flask-cors==3.0.10
 requests
 redis
+cryptography==40.0.1
