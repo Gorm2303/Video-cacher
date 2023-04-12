@@ -1,2 +1,5 @@
-Flask==2.1.2
+Flask==2.2.3
 Pytest==6.2.4
+requests
+redis
+cryptography==40.0.1
