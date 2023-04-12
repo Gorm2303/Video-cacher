@@ -5,28 +5,31 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-
   workflow_dispatch:
 
 jobs:
-  build-and-test:
+  build-test-dockerhub:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Build Docker image
-      run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/ba-video-cacher .
+      - name: Build and start services with docker-compose
+        run: |
+          docker-compose -f docker-compose.yml build
+          docker-compose -f docker-compose.yml up -d
 
-    - name: Run tests
-      run: docker run -e CI=true ${{ secrets.DOCKERHUB_USERNAME }}/ba-video-cacher pytest 
+      - name: Run tests with pytest
+        run: docker-compose -f docker-compose.yml exec -T cache_api pytest
 
-    - name: Login to Docker Hub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          
+      - name: Build Docker image
+        run: docker build . -t ${{ secrets.DOCKERHUB_USERNAME }}/ba-video-cacher
 
-    - name: Push Docker image to registry
-      run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/ba-video-cacher
+      - name: Push Docker image to registry
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/ba-video-cacher

@@ -5,13 +5,13 @@ services:
     restart: always
     volumes:
       - redis_data:/data
-    ports:
-      - "6379:6379"
+    expose:
+      - "6379"
     command: redis-server --save 60 1 --loglevel warning
-  cache-api:
+  cache_api:
     build: .
-    ports:
-      - "80:80"
+    expose:
+      - "8000"
     environment:
       - REDIS_URL=redis://redis:6379/0
       - VIDEOS_URL=http://video_reader:5000/videos
@@ -19,10 +19,7 @@ services:
     depends_on:
       - redis
       - video_reader
-  video_reader:
-    image: video-reader
-    ports:
-      - "5000:5000"
 
 volumes:
   redis_data:
+
