@@ -83,11 +83,12 @@ def search_videos():
 
     # Get all video metadata from Redis (or MongoDB if not in Redis)
     all_video_metadata = get_videos_metadata()
-
+    if not isinstance(all_video_metadata, list) or not any(isinstance(video, dict) for video in all_video_metadata):
+        return jsonify({'message': 'No videos found in the database'}), 200
     # Filter video metadata by matching the query string with the video title
     matching_videos = [video for video in all_video_metadata if query.lower() in video['title'].lower()]
 
     return jsonify(matching_videos)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, ssl_context=None)
